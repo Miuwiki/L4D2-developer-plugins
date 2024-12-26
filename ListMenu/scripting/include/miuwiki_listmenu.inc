@@ -15,11 +15,9 @@ methodmap ListMenu{
   /**
    * Create a list menu.
    * 
-   * @param handler Listmenu callback handler.
-   * 
    * @return        A panel handle with type ListMenu.
    */
-  public native ListMenu(ListMenuHandler handler);
+  public native ListMenu();
 
   /**
    * Set Title for list menu.
@@ -56,7 +54,7 @@ methodmap ListMenu{
    * 
    * @return The index of this item in it's list menu.
    */
-  public native void Send(int client, int time);
+  public native void Send(int client, ListMenuHandler handler, int time);
 }
 
 typeset ListMenuHandler

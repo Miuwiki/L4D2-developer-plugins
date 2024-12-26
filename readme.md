@@ -97,7 +97,7 @@ static char string[][][] = {
 
 Action Cmd_ShowTest(int client, int args)
 {
-	ListMenu listmenu = ListMenu(ListMenuHandler_ShowData);
+	ListMenu listmenu = ListMenu();
 	char title[128], name[128], description[128];
 
 	Format(title, sizeof(title), "测试菜单\n——————————————");
@@ -111,7 +111,7 @@ Action Cmd_ShowTest(int client, int args)
 		listmenu.AddItem(name, description);
 	}
 
-	listmenu.Send(client, 20);
+	listmenu.Send(client, ListMenuHandler_ShowData, 20);
 
 	return Plugin_Handled;
 }

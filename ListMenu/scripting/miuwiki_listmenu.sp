@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <sdkhooks>
 #include <sdktools>
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo =
 {
@@ -37,6 +37,8 @@ public Plugin myinfo =
 
 #define PLUGIN_TRANSLATION_FILE "miuwiki_listmenu.phrase.txt"
 
+#define PREFIX "   -"
+
 ConVar
 	cvar_panelmenu_each_count;
 
@@ -52,8 +54,8 @@ enum struct GlobalPluginData
 	StringMap panel;
 	ArrayList panelusing;
 
-	int currentpanel[L4D2_MAXPLAYERS + 1];
-	int currentpageindex[L4D2_MAXPLAYERS + 1];
+	// int currentpanel[L4D2_MAXPLAYERS + 1];
+	// int currentpageindex[L4D2_MAXPLAYERS + 1];
 }
 
 GlobalPluginData
@@ -66,9 +68,17 @@ enum struct ListData
 	StringMap passdata;
 }
 
-PrivateForward
-	g_PrivateForward_OnArrayList;
+enum struct GlobalPlayerData
+{
+	PrivateForward OnItemChoose;
 
+	int currentpanel;
+	int currentpageindex;
+}
+
+GlobalPlayerData
+	player[L4D2_MAXPLAYERS + 1];
+	
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	if( GetEngineVersion() != Engine_Left4Dead2 ) // only support left4dead2
@@ -93,10 +103,12 @@ int Miuwiki_ListMenu_Send(Handle nativeplugin, int numParams)
 		return 0;
 	}
 	int   client = GetNativeCell(2);
-	int   time   = GetNativeCell(3);
+	int   time   = GetNativeCell(4);
+	player[client].OnItemChoose.RemoveAllFunctions(nativeplugin);
+	player[client].OnItemChoose.AddFunction(nativeplugin, GetNativeFunction(3));
 
 	DrawPanelItemByList(panel, client, time);
-	plugin.currentpanel[client] = view_as<int>(panel);
+	player[client].currentpanel = view_as<int>(panel);
 	return 0;
 }
 
@@ -132,9 +144,10 @@ any Miuwiki_ListMenu_Init(Handle nativeplugin, int numParams)
 	plugin.panel.SetValue(key, data);
 	data.SetString("0", "");    // set data["0"] to empty string.
 
-	g_PrivateForward_OnArrayList.RemoveFunction(nativeplugin, GetNativeFunction(1));
-	g_PrivateForward_OnArrayList.AddFunction(nativeplugin, GetNativeFunction(1));
-
+	// g_PrivateForward_OnItemChoose.RemoveFunction(nativeplugin, GetNativeFunction(1));
+	// g_PrivateForward_OnItemChoose.RemoveAllFunctions(nativeplugin);
+	// g_PrivateForward_OnItemChoose.AddFunction(nativeplugin, GetNativeFunction(1));
+	// PrintToChatAll("current func list %d", g_PrivateForward_OnItemChoose.FunctionCount);
 	return panel;
 }
 
@@ -162,7 +175,11 @@ public void OnPluginStart()
 	LoadTranslations(PLUGIN_TRANSLATION_FILE);
 	plugin.panel      = new StringMap();
 	plugin.panelusing = new ArrayList();
-	g_PrivateForward_OnArrayList = new PrivateForward(ET_Ignore, Param_Cell, Param_Array, Param_Array);
+	for(int i = 0; i < sizeof(player); i++)
+	{
+		player[i].OnItemChoose = new PrivateForward(ET_Ignore, Param_Cell, Param_Array, Param_Array);
+	}
+	// g_PrivateForward_OnItemChoose = new PrivateForward(ET_Ignore, Param_Cell, Param_Array, Param_Array);
 
 	cvar_panelmenu_each_count = CreateConVar("l4d2_panelmenu_each_count", "5", "each page can show item", 0, true, 1.0, true, 7.0);
 }
@@ -202,15 +219,15 @@ public void OnMapStart()
 
 Action Timer_ClearUselessPanelHandle(Handle timer)
 {
-	for(int i = 0; i < sizeof(plugin.currentpanel); i++)
+	for(int i = 0; i < sizeof(player); i++)
 	{
-		if( plugin.currentpanel[i] == 0 )
+		if( player[i].currentpanel == 0 )
 			continue;
 			
-		if( plugin.panelusing.FindValue(plugin.currentpanel[i]) != -1 )
+		if( plugin.panelusing.FindValue(player[i].currentpanel) != -1 )
 			continue;
 
-		plugin.panelusing.Push(plugin.currentpanel[i]);
+		plugin.panelusing.Push(player[i].currentpanel);
 	}
 
 	static char key[128], indexkey[128];
@@ -245,8 +262,8 @@ Action Timer_ClearUselessPanelHandle(Handle timer)
 }
 public void OnClientDisconnect(int client)
 {
-	plugin.currentpanel[client]     = 0;
-	plugin.currentpageindex[client] = 0;
+	player[client].currentpanel     = 0;
+	player[client].currentpageindex = 0;
 }
 
 void DrawPanelItemByList(Panel panel, int client, int time)
@@ -264,7 +281,8 @@ void DrawPanelItemByList(Panel panel, int client, int time)
 	// 	plugin.PanelData.SetValue(key, list);
 	// 	plugin.PanelTitle.SetString(key, title);
 	// }
-
+	// char buffer[256] = "abc\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na";
+	// panel.DrawText(buffer);
 	int count     = 0;
 	int itemcount = data.Size - 1;
 	int maxpage   = itemcount / plugin.cvar.panel_eachcount;
@@ -279,7 +297,7 @@ void DrawPanelItemByList(Panel panel, int client, int time)
 		data.GetArray(key, item, sizeof(item));
 
 		panel.DrawItem(item.name, ITEMDRAW_DEFAULT);
-		FormatEx(key, sizeof(key), "   -%s", item.description);
+		FormatEx(key, sizeof(key), "%s%s", PREFIX, item.description);
 		panel.DrawItem(key, ITEMDRAW_RAWLINE);
 		count++;
 	}
@@ -304,11 +322,14 @@ void DrawPanelItemByList(Panel panel, int client, int time)
 		panel.DrawItem(translate, ITEMDRAW_DEFAULT);
 	}
 	
+
 	// page index start from 0 so maxpage need -1.
-	plugin.currentpageindex[client] = 0;
+	player[client].currentpageindex = 0;
 	FormatEx(translate, sizeof(translate), "%T", "CANCEL", LANG_SERVER);
 	panel.DrawItem(translate, ITEMDRAW_DEFAULT);
+	
 	panel.Send(client, Panel_Callback, time);
+	delete panel;
 }
 
 int Panel_Callback(Menu menu, MenuAction action, int client, int item_index)
@@ -322,7 +343,7 @@ int Panel_Callback(Menu menu, MenuAction action, int client, int item_index)
 
 	char key[128];
 	// IntToString(GetClientUserId(client), key, sizeof(key));
-	IntToString(plugin.currentpanel[client], key, sizeof(key));
+	IntToString(player[client].currentpanel, key, sizeof(key));
 	if( !plugin.panel.ContainsKey(key) )
 	{
 		LogMessage("Panel menu failed to find data through menu handle.");
@@ -333,15 +354,29 @@ int Panel_Callback(Menu menu, MenuAction action, int client, int item_index)
 	{
 		case MenuAction_Select:
 		{
-			StringMap data;
+			StringMap data; // this is item data of all the panel. 
 			plugin.panel.GetValue(key, data);
-			int itemcount = data.Size - 1;
-			int maxpage   = itemcount / plugin.cvar.panel_eachcount;
-			maxpage       = itemcount % plugin.cvar.panel_eachcount == 0 ? maxpage : maxpage + 1; 
-			if( 0 < item_index < 7 )
+			int total_itemcount = data.Size - 1;
+			int list_index      = player[client].currentpageindex * plugin.cvar.panel_eachcount + item_index;
+			int maxpage         = total_itemcount / plugin.cvar.panel_eachcount;
+			maxpage             = total_itemcount % plugin.cvar.panel_eachcount == 0 ? maxpage : maxpage + 1;
+	
+			if( item_index == 8 && player[client].currentpageindex > 0 ) // go back 
 			{
-				// plugin.currentpageindex always start from 0
-				int list_index = plugin.currentpageindex[client] * plugin.cvar.panel_eachcount + item_index;
+				player[client].currentpageindex -= 1;
+				SetPanelByPage(client); // push which page client to go  
+			}
+			else if( item_index == 9 && player[client].currentpageindex < (maxpage - 1) ) // go next
+			{
+				player[client].currentpageindex += 1;
+				SetPanelByPage(client); // push which page client to go  
+			}
+			// if we choose index between 0 and cvar data
+			// if dataindex  is out of total_itemcount;
+			else if( 0 < item_index <= plugin.cvar.panel_eachcount 
+				     &&  list_index <= total_itemcount 
+					) 
+			{
 
 				ListData item;
 				IntToString(list_index, key, sizeof(key));
@@ -350,36 +385,27 @@ int Panel_Callback(Menu menu, MenuAction action, int client, int item_index)
 				int index[2];
 				index[0] = item_index;
 				index[1] = list_index;
-				Call_StartForward(g_PrivateForward_OnArrayList);
+				Call_StartForward(player[client].OnItemChoose);
 				Call_PushCell(client);
 				Call_PushArray(index, sizeof(index));
 				Call_PushArray(item, sizeof(item));
 				Call_Finish();
 
-				plugin.currentpageindex[client] = 0;
-				plugin.currentpanel[client] = 0;
+				player[client].currentpageindex = 0;
+				player[client].currentpanel = 0;
 			}
-			else if( item_index == 8 && plugin.currentpageindex[client] > 0 ) // go back 
-			{
-				plugin.currentpageindex[client] -= 1;
-				SetPanelByPage(client); // push which page client to go  
-			}
-			else if( item_index == 9 && plugin.currentpageindex[client] < (maxpage - 1) ) // go next
-			{
-				plugin.currentpageindex[client] += 1;
-				SetPanelByPage(client); // push which page client to go  
-			}
-			else if( item_index == 10 )
+			// item_index == 10 or other issue.
+			else 
 			{
 				// nothing to do.
-				plugin.currentpageindex[client] = 0;
-				plugin.currentpanel[client] = 0;
+				player[client].currentpageindex = 0;
+				player[client].currentpanel = 0;
 			}
 		}
 		case MenuAction_End:
 		{
-			plugin.currentpageindex[client] = 0;
-			plugin.currentpanel[client] = 0;
+			player[client].currentpageindex = 0;
+			player[client].currentpanel = 0;
 		}
 	}
 	return 0;
@@ -391,7 +417,7 @@ void SetPanelByPage(int client) // reset which page client at last
 		return;
 
 	char key[128], title[128];
-	IntToString(plugin.currentpanel[client], key, sizeof(key));
+	IntToString(player[client].currentpanel, key, sizeof(key));
 	if( !plugin.panel.ContainsKey(key) )
 	{
 		LogMessage("Panel menu failed to find data through client userid in next page.");
@@ -410,8 +436,8 @@ void SetPanelByPage(int client) // reset which page client at last
 	// plugin.PanelTitle.GetString(key, title, sizeof(title));
 	int count     = 0;
 	int itemcount = data.Size - 1;
-	int start     = plugin.currentpageindex[client]       * plugin.cvar.panel_eachcount + 1;
-	int end       = (plugin.currentpageindex[client] + 1) * plugin.cvar.panel_eachcount;
+	int start     = player[client].currentpageindex       * plugin.cvar.panel_eachcount + 1;
+	int end       = (player[client].currentpageindex + 1) * plugin.cvar.panel_eachcount;
 	int maxpage   = itemcount / plugin.cvar.panel_eachcount;
 	maxpage       = itemcount % plugin.cvar.panel_eachcount == 0 ? maxpage : maxpage + 1; 
 
@@ -425,7 +451,7 @@ void SetPanelByPage(int client) // reset which page client at last
 		data.GetArray(key, item, sizeof(item));
 
 		panel.DrawItem(item.name, ITEMDRAW_DEFAULT);
-		FormatEx(key, sizeof(key), "   -%s", item.description);
+		FormatEx(key, sizeof(key), "%s%s", PREFIX, item.description);
 		panel.DrawItem(key, ITEMDRAW_RAWLINE);
 		count++;
 	}
@@ -438,10 +464,11 @@ void SetPanelByPage(int client) // reset which page client at last
 
 	static char translate[64];
 	FormatEx(translate, sizeof(translate), "%T", "GOBACK", LANG_SERVER);
-	plugin.currentpageindex[client] == 0             ? panel.DrawItem("", ITEMDRAW_SPACER) : panel.DrawItem(translate, ITEMDRAW_DEFAULT);
+	player[client].currentpageindex == 0             ? panel.DrawItem("", ITEMDRAW_SPACER) : panel.DrawItem(translate, ITEMDRAW_DEFAULT);
 	FormatEx(translate, sizeof(translate), "%T", "GONEXT", LANG_SERVER);
-	plugin.currentpageindex[client] == (maxpage - 1) ? panel.DrawItem("", ITEMDRAW_SPACER) : panel.DrawItem(translate, ITEMDRAW_DEFAULT);
+	player[client].currentpageindex == (maxpage - 1) ? panel.DrawItem("", ITEMDRAW_SPACER) : panel.DrawItem(translate, ITEMDRAW_DEFAULT);
 	FormatEx(translate, sizeof(translate), "%T", "CANCEL", LANG_SERVER);
 	panel.DrawItem(translate, ITEMDRAW_DEFAULT);
 	panel.Send(client, Panel_Callback, MENU_TIME_FOREVER);
+	delete panel;
 }
