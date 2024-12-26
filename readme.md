@@ -147,6 +147,9 @@ void ListMenuHandler_ShowData(int client, int index[2], ListData item)
 
 </details>
 
+#### 版本信息: 
++ v1.1 修复菜单选项错误以及菜单索引超出cvar设置的显示上限.
++ v1.0 upload plugin
 #### 已确认问题: 
 + 暂无
 #### 可选插件说明:
