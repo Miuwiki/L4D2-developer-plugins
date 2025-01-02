@@ -7,7 +7,7 @@
 curl拓展作者以及后续fork 请到上方英文介绍页底部鸣谢寻找.
 <table>
     <tr>
-        <td>windows</td>
+        <td>linux</td>
         <td>x</td>
         <td>windows</td>
         <td>√</td>
@@ -73,7 +73,7 @@ void MailSendResult(int code, const char[] message)
 
 <table>
     <tr>
-        <td>windows</td>
+        <td>linux</td>
         <td>√</td>
         <td>windows</td>
         <td>√</td>

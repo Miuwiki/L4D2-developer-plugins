@@ -23,7 +23,6 @@ methodmap ListMenu{
    * Set Title for list menu.
    * 
    * @param title Title for list menu.
-   * @param ...   Format arguments.
    * 
    */
   public native void SetTitle(const char[] title);
@@ -49,8 +48,9 @@ methodmap ListMenu{
   /**
    * Send a list menu to client.
    * 
-   * @param client The client index to send.
-   * @param time   How many time will menu show.
+   * @param client  The client index to send.
+   * @param handler Listmenu callback handler. 
+   * @param time    How many time will menu show.
    * 
    * @return The index of this item in it's list menu.
    */
