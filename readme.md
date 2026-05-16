@@ -155,3 +155,60 @@ void ListMenuHandler_ShowData(int client, int index[2], ListData item)
 #### 可选插件说明:
 + 暂无
 * * *
+### Point Script Bar
+> *English introduction please view [this](https://forums.alliedmods.net/showthread.php?p=2844312#post2844312)*  
+提供可在任意时刻显示的游戏原生进度条, 可随时更改进度条上的文字, 并且不影响玩家原本操作.
+
+<table>
+    <tr>
+        <td>linux</td>
+        <td>√</td>
+        <td>windows</td>
+        <td>√</td>
+    </tr>
+</table>
+
+#### 接口使用: 
+<details>
+
+<summary>详细信息</summary>
+
+```sourcepawn
+// start normal bar, see textbar.plugin to get more example
+Action Cmd_BarOnce(int client, int args)
+{
+    if( client < 1 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client) )
+        return Plugin_Handled;
+
+    if( args != 0 )
+        return Plugin_Handled;
+    
+    PointScriptBar bar = PointScriptBar(client);
+    bar.persent  = 0.0;
+    bar.pause    = false;
+    bar.SetText("text");
+    bar.SetSubText("subtext");
+
+    bar.Apply(5.0);
+    PrintToChat(client, "starting bar at once");
+    return Plugin_Handled;
+}
+```
+</details>
+
+<details>
+
+<summary>效果图</summary>
+
+![图片描述](./__image/pointscriptbar.gif)
+
+</details>
+
+#### 版本信息: 
++ v1.0 upload plugin
+#### 已确认问题: 
++ 暂无
+#### 可选插件说明:
++ 暂无
+* * *
+

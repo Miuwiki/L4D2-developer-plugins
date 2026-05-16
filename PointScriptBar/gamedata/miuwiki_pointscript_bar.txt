@@ -1,0 +1,36 @@
+"Games"
+{
+	"left4dead2"
+	{
+        "Offsets"
+        {
+            "CPointScriptUseTarget::UpdateTransmitState"
+			{
+				"library"	"server"
+				"linux"		"22"
+                "windows"   "21"
+			}
+        }
+		"Signatures"
+		{
+            "CBaseEntity::SetTransmitState"
+            {
+                "library"	"server"
+				"linux"		"@_ZN11CBaseEntity16SetTransmitStateEi"
+				"windows"	"\x55\x8B\xEC\x56\x8B\x71\x28"
+            }
+            "CPointScriptUseTarget::ScriptSetUseSubString"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CPointScriptUseTarget21ScriptSetUseSubStringEPKc"
+				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x56\x57\x8B\xF1\x50\x8D\x4D\x08\x51\xE8\x2A\x2A\x2A\x2A\x8B\x38\x83\xC4\x08\x39\xBE\x30\x04\x00\x00"
+			}
+            "CPointScriptUseTarget::ScriptSetUseString"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CPointScriptUseTarget18ScriptSetUseStringEPKc"
+				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x56\x57\x8B\xF1\x50\x8D\x4D\x08\x51\xE8\x2A\x2A\x2A\x2A\x8B\x38\x83\xC4\x08\x39\xBE\x2C\x04\x00\x00"
+			}
+		}
+	}
+}
