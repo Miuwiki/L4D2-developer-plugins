@@ -201,6 +201,7 @@ Action Cmd_BarOnce(int client, int args)
 <summary>效果图</summary>
 
 ![图片描述](./__image/pointscriptbar.gif)
+![图片描述](./__image/pointscriptbar2.gif)
 
 </details>
 
