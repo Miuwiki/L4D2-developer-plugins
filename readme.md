@@ -67,7 +67,7 @@ void MailSendResult(int code, const char[] message)
 + 添加收件人邮箱务必在每个邮箱后添加","号, 最后一个也要添加.  
 * * *
 
-### List Menu
+## List Menu
 > *English introduction please view [this](https://forums.alliedmods.net/showthread.php?t=349912)*  
 提供附带说明的菜单, 简化二级菜单操作流程
 
@@ -155,7 +155,7 @@ void ListMenuHandler_ShowData(int client, int index[2], ListData item)
 #### 可选插件说明:
 + 暂无
 * * *
-### Point Script Bar
+## Point Script Bar
 > *English introduction please view [this](https://forums.alliedmods.net/showthread.php?p=2844312#post2844312)*  
 提供可在任意时刻显示的游戏原生进度条, 可随时更改进度条上的文字, 并且不影响玩家原本操作.
 
